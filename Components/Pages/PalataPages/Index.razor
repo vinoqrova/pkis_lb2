@@ -1,0 +1,67 @@
+﻿@page "/palata"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using lab10.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Палаты</PageTitle>
+
+<h1>Палаты отделения - @Title</h1>
+
+<p>
+    <a href="palata/create?otdelenieid=@OtdelenieId">Добавить</a>
+</p>
+
+<p>
+    <a href="otdelenies">Возврат к списку отделений</a>
+</p>
+
+<QuickGrid Class="table" Items="filteredPalatas">
+    <PropertyColumn Title="Номер палаты" Property="palata => palata.PalataNum" />
+    <PropertyColumn Title="Кол-во коек" Property="palata => palata.CountBeds" />
+    <PropertyColumn Title="Кол-во пациентов" Property="palata => palata.Patients.Count()" />
+
+    <TemplateColumn Context="palata">
+        <a href="@($"patients?palataid={palata.PalataId}&otdelenieid={palata.OtdelenieId}")">Пациенты</a> |
+        <a href="@($"palata/edit?palataid={palata.PalataId}&otdelenieid={palata.OtdelenieId}")">Редактировать</a> |
+        <a href="@($"palata/details?palataid={palata.PalataId}&otdelenieid={palata.OtdelenieId}")">Просмотр</a> |
+        <a href="@($"palata/delete?palataid={palata.PalataId}&otdelenieid={palata.OtdelenieId}")">Удаление</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? OtdelenieId { get; set; }
+
+    public string? Title { get; set; }
+
+    private ApplicationDbContext context = default!;
+    private IQueryable<Palata> filteredPalatas = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+
+        if (OtdelenieId == null)
+        {
+            NavigationManager.NavigateTo("not found");
+            return;
+        }
+
+        var otdelenie = context.Otdelenie.FirstOrDefault(x => x.OtdelenieId == OtdelenieId);
+        if (otdelenie == null)
+        {
+            NavigationManager.NavigateTo("not found");
+            return;
+        }
+
+        Title = otdelenie!.OtdelenieName + " " + otdelenie!.HeadDoc;
+
+        // Фильтрация палат по отделению
+        filteredPalatas = context.Palata.Where(p => p.OtdelenieId == OtdelenieId);
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

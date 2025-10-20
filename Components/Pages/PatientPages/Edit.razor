@@ -1,0 +1,120 @@
+﻿@page "/patients/edit"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактирование</PageTitle>
+
+<h1>Редактирование</h1>
+
+<hr />
+@if (Patient is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Patient" OnValidSubmit="UpdatePatient" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Patient.PatientId" value="@Patient.PatientId" />
+                <div class="mb-3">
+                    <label for="patientfirstname" class="form-label">Имя:</label>
+                    <InputText id="patientfirstname" @bind-Value="Patient.PatientFirstName" class="form-control" />
+                    <ValidationMessage For="() => Patient.PatientFirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="patientlastname" class="form-label">Фамилия:</label>
+                    <InputText id="patientlastname" @bind-Value="Patient.PatientLastName" class="form-control" />
+                    <ValidationMessage For="() => Patient.PatientLastName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="patientmiddlename" class="form-label">Отчество:</label>
+                    <InputText id="patientmiddlename" @bind-Value="Patient.PatientMiddleName" class="form-control" />
+                    <ValidationMessage For="() => Patient.PatientMiddleName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="birthdate" class="form-label">Дата рождения:</label>
+                    <InputDate id="birthdate" @bind-Value="Patient.BirthDate" class="form-control" />
+                    <ValidationMessage For="() => Patient.BirthDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="genger" class="form-label">Пол:</label>
+                    <InputText id="genger" @bind-Value="Patient.Genger" class="form-control" />
+                    <ValidationMessage For="() => Patient.Genger" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="diagnos" class="form-label">Диагноз:</label>
+                    <InputText id="diagnos" @bind-Value="Patient.Diagnos" class="form-control" />
+                    <ValidationMessage For="() => Patient.Diagnos" class="text-danger" />
+                </div>
+                <input type="hidden" name="Patient.PalataId" @bind="PalataId" class="form-control" />
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/patients?palataid=@PalataId&?otdelenieid=@OtdelenieId">Возврат к списку палат</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int PatientId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? PalataId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? OtdelenieId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Patient? Patient { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Patient ??= await context.Patient.FirstOrDefaultAsync(m => m.PatientId == PatientId);
+
+        if (Patient is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdatePatient()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Patient!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PatientExists(Patient!.PatientId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo($"/patients?palataid={PalataId}&?otdelenieid={OtdelenieId}");
+    }
+
+    private bool PatientExists(int patientid)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Patient.Any(e => e.PatientId == patientid);
+    }
+}

@@ -1,0 +1,70 @@
+﻿@page "/palata/create"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление</PageTitle>
+
+<h1>Добавление</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Palata" OnValidSubmit="AddPalata" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="palatanum" class="form-label">Номер палаты:</label>
+                <InputText id="palatanum" @bind-Value="Palata.PalataNum" class="form-control" /> 
+                <ValidationMessage For="() => Palata.PalataNum" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="countbeds" class="form-label">Кол-во коек:</label>
+                <InputNumber id="countbeds" @bind-Value="Palata.CountBeds" class="form-control" /> 
+                <ValidationMessage For="() => Palata.CountBeds" class="text-danger" /> 
+            </div>
+            <input type="hidden" name="Palata.OtdelenieId" @bind="Palata.OtdelenieId" class="form-control" />
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/palata?otdelenieid=@OtdelenieId">Возврат к списку палат</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? OtdelenieId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Palata Palata { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddPalata()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Palata.Add(Palata);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/palata?otdelenieid="+@OtdelenieId.ToString());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        if (OtdelenieId == null)
+        {
+            NavigationManager.NavigateTo("not found");
+        }
+        Palata.OtdelenieId = OtdelenieId ?? 0;
+
+        var otdelenie = context.Otdelenie.FirstOrDefault(x => x.OtdelenieId == OtdelenieId);
+        if (otdelenie == null)
+        {
+            NavigationManager.NavigateTo("not found");
+        }
+
+    }
+}

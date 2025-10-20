@@ -1,0 +1,38 @@
+﻿@page "/otdelenies"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using lab10.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Отделения</PageTitle>
+
+<h1>Отделения</h1>
+
+<p>
+    <a href="otdelenies/create">Добавить</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Otdelenie">
+    <PropertyColumn Title="Наименование" Property="otdelenie => otdelenie.OtdelenieName" />
+    <PropertyColumn Title="Заведующий" Property="otdelenie => otdelenie.HeadDoc" />
+    <PropertyColumn Title="Кол-во палат" Property="otdelenie => otdelenie.Palatas.Count()" />
+
+    <TemplateColumn Context="otdelenie">
+        <a href="@($"palata?otdelenieid={otdelenie.OtdelenieId}")">Палаты</a> |
+        <a href="@($"otdelenies/edit?otdelenieid={otdelenie.OtdelenieId}")">Редактировать</a> |
+        <a href="@($"otdelenies/details?otdelenieid={otdelenie.OtdelenieId}")">Просмотр</a> |
+        <a href="@($"otdelenies/delete?otdelenieid={otdelenie.OtdelenieId}")">Удалить</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

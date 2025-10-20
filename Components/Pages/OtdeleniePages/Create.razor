@@ -1,0 +1,73 @@
+﻿@page "/otdelenies/create"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление</PageTitle>
+
+<h1>Добавление</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Otdelenie" OnValidSubmit="AddOtdelenie" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="otdeleniename" class="form-label">Наименование:</label>
+                <InputText id="otdeleniename" @bind-Value="Otdelenie.OtdelenieName" class="form-control" />
+                <ValidationMessage For="() => Otdelenie.OtdelenieName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="headdoc" class="form-label">Заведующий:</label>
+                <InputText id="headdoc" @bind-Value="Otdelenie.HeadDoc" class="form-control" />
+                <ValidationMessage For="() => Otdelenie.HeadDoc" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="countroom" class="form-label">Кол-во палат:</label>
+                <InputNumber id="countroom" @bind-Value="Otdelenie.CountRoom" class="form-control" />
+                <ValidationMessage For="() => Otdelenie.CountRoom" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/otdelenies">Возврат к списку отделений</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Otdelenie Otdelenie { get; set; } = new();
+
+    private async Task AddOtdelenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Сначала создаем отделение
+        context.Otdelenie.Add(Otdelenie);
+        await context.SaveChangesAsync();
+
+        // Теперь создаем палаты, если указано количество
+        if (Otdelenie.CountRoom > 0)
+        {
+            var palatas = new List<Palata>();
+
+            for (int i = 1; i <= Otdelenie.CountRoom; i++)
+            {
+                palatas.Add(new Palata
+                {
+                    PalataNum = i.ToString(), // Нумеруем от 1 до n
+                    CountBeds = 0, // Можно установить значение по умолчанию или добавить поле в форму
+                    OtdelenieId = Otdelenie.OtdelenieId
+                });
+            }
+
+            context.Palata.AddRange(palatas);
+            await context.SaveChangesAsync();
+        }
+
+        NavigationManager.NavigateTo("/otdelenies");
+    }
+}

@@ -1,0 +1,98 @@
+﻿@page "/otdelenies/edit"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактирование</PageTitle>
+
+<h1>Редактирование</h1>
+
+<hr />
+@if (Otdelenie is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Otdelenie" OnValidSubmit="UpdateOtdelenie" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Otdelenie.OtdelenieId" value="@Otdelenie.OtdelenieId" />
+                <div class="mb-3">
+                    <label for="otdeleniename" class="form-label">Наименование:</label>
+                    <InputText id="otdeleniename" @bind-Value="Otdelenie.OtdelenieName" class="form-control" />
+                    <ValidationMessage For="() => Otdelenie.OtdelenieName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="headdoc" class="form-label">Заведующий:</label>
+                    <InputText id="headdoc" @bind-Value="Otdelenie.HeadDoc" class="form-control" />
+                    <ValidationMessage For="() => Otdelenie.HeadDoc" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="countroom" class="form-label">Кол-во палат:</label>
+                    <InputNumber id="countroom" @bind-Value="Otdelenie.CountRoom" class="form-control" />
+                    <ValidationMessage For="() => Otdelenie.CountRoom" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/otdelenies">Возврат к списку отделений</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int OtdelenieId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Otdelenie? Otdelenie { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Otdelenie ??= await context.Otdelenie.FirstOrDefaultAsync(m => m.OtdelenieId == OtdelenieId);
+
+        if (Otdelenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateOtdelenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Otdelenie!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!OtdelenieExists(Otdelenie!.OtdelenieId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/otdelenies");
+    }
+
+    private bool OtdelenieExists(int otdelenieid)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Otdelenie.Any(e => e.OtdelenieId == otdelenieid);
+    }
+}

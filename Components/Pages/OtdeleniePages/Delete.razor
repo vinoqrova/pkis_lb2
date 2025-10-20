@@ -1,0 +1,62 @@
+﻿@page "/otdelenies/delete"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удаление</PageTitle>
+
+<h1>Удаление</h1>
+
+<p>Вы уверены что хотите удалить?</p>
+<div>
+    <hr />
+    @if (otdelenie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Наименование</dt>
+            <dd class="col-sm-10">@otdelenie.OtdelenieName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Заведующий</dt>
+            <dd class="col-sm-10">@otdelenie.HeadDoc</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Кол-во палат</dt>
+            <dd class="col-sm-10">@otdelenie.CountRoom</dd>
+        </dl>
+        <EditForm method="post" Model="otdelenie" OnValidSubmit="DeleteOtdelenie" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(otdelenie is null)">Удалить</button> |
+            <a href="/otdelenies">Возврат к списку отделений</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Otdelenie? otdelenie;
+
+    [SupplyParameterFromQuery]
+    private int OtdelenieId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        otdelenie = await context.Otdelenie.FirstOrDefaultAsync(m => m.OtdelenieId == OtdelenieId);
+
+        if (otdelenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteOtdelenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Otdelenie.Remove(otdelenie!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/otdelenies");
+    }
+}

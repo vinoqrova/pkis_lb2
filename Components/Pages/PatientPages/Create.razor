@@ -1,0 +1,104 @@
+﻿@page "/patients/create"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление</PageTitle>
+
+<h1>Добавление пациента</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Patient" OnValidSubmit="AddPatient" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="patientfirstname" class="form-label">Имя:</label>
+                <InputText id="patientfirstname" @bind-Value="Patient.PatientFirstName" class="form-control" />
+                <ValidationMessage For="() => Patient.PatientFirstName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="patientlastname" class="form-label">Фамилия:</label>
+                <InputText id="patientlastname" @bind-Value="Patient.PatientLastName" class="form-control" />
+                <ValidationMessage For="() => Patient.PatientLastName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="patientmiddlename" class="form-label">Отчество:</label>
+                <InputText id="patientmiddlename" @bind-Value="Patient.PatientMiddleName" class="form-control" />
+                <ValidationMessage For="() => Patient.PatientMiddleName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="birthdate" class="form-label">Дата рождения:</label>
+                <InputDate id="birthdate" @bind-Value="Patient.BirthDate" class="form-control" />
+                <ValidationMessage For="() => Patient.BirthDate" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="genger" class="form-label">Пол:</label>
+                <InputSelect id="genger" @bind-Value="Patient.Genger" class="form-control">
+                    <option value="">Выберите пол</option>
+                    <option value="Мужской">Мужской</option>
+                    <option value="Женский">Женский</option>
+                </InputSelect>
+                <ValidationMessage For="() => Patient.Genger" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="diagnos" class="form-label">Диагноз:</label>
+                <InputText id="diagnos" @bind-Value="Patient.Diagnos" class="form-control" />
+                <ValidationMessage For="() => Patient.Diagnos" class="text-danger" />
+            </div>
+            <input type="hidden" name="Patient.PalataId" value="@PalataId" />
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/patients?palataid=@PalataId&otdelenieid=@OtdelenieId">Возврат к списку пациентов</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? PalataId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? OtdelenieId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Patient Patient { get; set; } = new();
+
+    private async Task AddPatient()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Убедимся, что PalataId установлен
+        Patient.PalataId = PalataId ?? 0;
+
+        context.Patient.Add(Patient);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo($"/patients?palataid={PalataId}&otdelenieid={OtdelenieId}");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        if (PalataId == null)
+        {
+            NavigationManager.NavigateTo("/notfound");
+            return;
+        }
+
+        // Проверяем существование палаты
+        var palata = await context.Palata.FirstOrDefaultAsync(x => x.PalataId == PalataId);
+        if (palata == null)
+        {
+            NavigationManager.NavigateTo("/notfound");
+            return;
+        }
+
+        // Устанавливаем PalataId для пациента
+        Patient.PalataId = PalataId.Value;
+    }
+}

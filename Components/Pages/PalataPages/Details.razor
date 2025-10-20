@@ -1,0 +1,57 @@
+﻿@page "/palata/details"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Просмотр</PageTitle>
+
+<h1>Просмотр</h1>
+
+<div>
+    <h2>Palata</h2>
+    <hr />
+    @if (palata is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">Номер палаты</dt>
+            <dd class="col-sm-10">@palata.PalataNum</dd>
+            <dt class="col-sm-2">Кол-во коек</dt>
+            <dd class="col-sm-10">@palata.CountBeds</dd>
+            @* <dt class="col-sm-2">Отделение</dt>
+            <dd class="col-sm-10">@palata.OtdelenieId</dd> *@
+        </dl>
+        <div>
+            <a href="@($"/palata/edit?palataid={palata.PalataId}")">Редактировать</a> |
+            <a href="@($"/palata?otdelenieid=" + palata.OtdelenieId.ToString())">Возврат к списку палат</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Palata? palata;
+
+    [SupplyParameterFromQuery]
+    private int PalataId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int OtdelenieId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Фильтрация по PalataId И OtdelenieId
+        palata = await context.Palata
+            .FirstOrDefaultAsync(m => m.PalataId == PalataId && m.OtdelenieId == OtdelenieId);
+
+        if (palata is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

@@ -1,0 +1,49 @@
+﻿@page "/otdelenies/details"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<lab10.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Просмотр</PageTitle>
+
+<h1>Просмотр</h1>
+
+<div>
+    <hr />
+    @if (otdelenie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Наименование</dt>
+            <dd class="col-sm-10">@otdelenie.OtdelenieName</dd>
+            <dt class="col-sm-2">Заведующий</dt>
+            <dd class="col-sm-10">@otdelenie.HeadDoc</dd>
+            <dt class="col-sm-2">Кол-во палат</dt>
+            <dd class="col-sm-10">@otdelenie.CountRoom</dd>
+        </dl>
+        <div>
+            <a href="@($"/otdelenies/edit?otdelenieid={otdelenie.OtdelenieId}")">Редактировать</a> |
+            <a href="@($"/otdelenies")">Возврат к списку отделений</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Otdelenie? otdelenie;
+
+    [SupplyParameterFromQuery]
+    private int OtdelenieId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        otdelenie = await context.Otdelenie.FirstOrDefaultAsync(m => m.OtdelenieId == OtdelenieId);
+
+        if (otdelenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

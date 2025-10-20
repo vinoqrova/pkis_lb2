@@ -1,0 +1,57 @@
+﻿@page "/patients/details"
+@using Microsoft.EntityFrameworkCore
+@using lab10.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Пациенты</PageTitle>
+
+<h1>Список пациентов</h1>
+
+@if (PalataId.HasValue)
+{
+    <p>Палата: @PalataId</p>
+}
+
+<p>
+    <a href="/patients/create?palataid=@PalataId&otdelenieid=@OtdelenieId" class="btn btn-primary">Добавить нового пациента</a>
+</p>
+
+<QuickGrid Items="patients" Class="table">
+    <PropertyColumn Property="p => p.PatientLastName" Title="Фамилия" />
+    <PropertyColumn Property="p => p.PatientFirstName" Title="Имя" />
+    <PropertyColumn Property="p => p.PatientMiddleName" Title="Отчество" />
+    <PropertyColumn Property="p => p.BirthDate" Title="Дата рождения" Format="dd.MM.yyyy" />
+    <PropertyColumn Property="p => p.Genger" Title="Пол" />
+    <PropertyColumn Property="p => p.Diagnos" Title="Диагноз" />
+</QuickGrid>
+
+<div>
+    <a href="/palata?otdelenieid=@OtdelenieId" class="btn btn-secondary">Назад к палатам</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? PalataId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? OtdelenieId { get; set; }
+
+    private List<Patient> patients = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // ПРОСТО ДОБАВЬТЕ ЭТУ ФИЛЬТРАЦИЮ:
+        if (PalataId.HasValue)
+        {
+            patients = await context.Patient
+                .Where(p => p.PalataId == PalataId.Value)  // ← ФИЛЬТРУЕМ ПО ПАЛАТЕ
+                .ToListAsync();
+        }
+        else
+        {
+            patients = new List<Patient>();  // Если палата не указана - пустой список
+        }
+    }
+}

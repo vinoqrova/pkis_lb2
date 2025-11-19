@@ -1,0 +1,7 @@
+Build completed at Wed Nov 19 06:57:45 AM UTC 2025
+myapp                          final             9d5cbeed61a9   7 hours ago    262MB
+vinoqrova/myapp                1.0.0             9d5cbeed61a9   7 hours ago    262MB
+vinoqrova/myapp                2025-11-18-2349   9d5cbeed61a9   7 hours ago    262MB
+vinoqrova/myapp                latest            9d5cbeed61a9   7 hours ago    262MB
+myapp                          1.0-multi-stage   f7481bf109da   8 hours ago    298MB
+myapp                          multi-stage       f7481bf109da   8 hours ago    298MB

@@ -1,5 +1,3 @@
-mkdir -p .github/workflows
-Содержимое файла .github/workflows/ci.yml:
 name: CI Pipeline
 
 # Запускать workflow при push в main и при создании pull request

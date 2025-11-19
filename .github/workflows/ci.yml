@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ main ]
 
+
 jobs:
   # Job 1: Проверка качества Dockerfile
   lint:

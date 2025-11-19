@@ -19,4 +19,4 @@ COPY --from=build /app/publish ./
 
 # Пробрасываем порт и запускаем
 EXPOSE 80
-ENTRYPOINT ["dotnet", "lab10.dll"]
+CMD ["dotnet", "lab10.dll"]
